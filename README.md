@@ -28,8 +28,10 @@
 
 ## 🧩 Architecture
 
+```
 Converso (Next.js App)
 ├── Auth & User Management (Clerk)
 ├── Database & APIs (Supabase)
 ├── AI Voice Generation (Vapi)
 └── Frontend Pages (Lessons, Dashboard, Admin, etc.)
+```
