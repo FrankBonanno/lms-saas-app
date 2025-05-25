@@ -5,6 +5,7 @@ import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import Lottie, { LottieRefCurrentProps } from 'lottie-react';
 import soundwaves from '@/constants/soundwaves.json';
+import { addToSessionHistory } from '@/lib/actions/companion.actions';
 
 enum CallStatus {
 	INACTIVE = 'INACTIVE',
@@ -13,7 +14,16 @@ enum CallStatus {
 	FINISHED = 'FINISHED',
 }
 
-const CompanionComponent = ({ subject, topic, name, userName, userImage, style, voice }: CompanionComponentProps) => {
+const CompanionComponent = ({
+	subject,
+	topic,
+	name,
+	userName,
+	userImage,
+	style,
+	voice,
+	companionId,
+}: CompanionComponentProps) => {
 	const [callStatus, setCallStatus] = useState<CallStatus>(CallStatus.INACTIVE);
 	const [isSpeaking, setIsSpeaking] = useState(false);
 	const [isMuted, setIsMuted] = useState(false);
@@ -22,18 +32,11 @@ const CompanionComponent = ({ subject, topic, name, userName, userImage, style, 
 	const lottieRef = useRef<LottieRefCurrentProps>(null);
 
 	useEffect(() => {
-		if (lottieRef) {
-			if (isSpeaking) {
-				lottieRef.current?.play();
-			} else {
-				lottieRef.current?.stop();
-			}
-		}
-	}, [isSpeaking, lottieRef]);
-
-	useEffect(() => {
 		const onCallStart = () => setCallStatus(CallStatus.ACTIVE);
-		const onCallEnd = () => setCallStatus(CallStatus.FINISHED);
+		const onCallEnd = () => {
+			setCallStatus(CallStatus.FINISHED);
+			addToSessionHistory(companionId);
+		};
 
 		const onMessage = (message: Message) => {
 			if (message.type === 'transcript' && message.transcriptType === 'final') {
@@ -62,6 +65,16 @@ const CompanionComponent = ({ subject, topic, name, userName, userImage, style, 
 			vapi.off('error', onError);
 		};
 	}, []);
+
+	useEffect(() => {
+		if (lottieRef) {
+			if (isSpeaking) {
+				lottieRef.current?.play();
+			} else {
+				lottieRef.current?.stop();
+			}
+		}
+	}, [isSpeaking, lottieRef]);
 
 	const toggleMicrophone = () => {
 		const muted = vapi.isMuted();
